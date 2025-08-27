@@ -2,11 +2,11 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
 // AuthContext.jsx
-"use client"
+"use client";
 import React, { createContext, useState, useEffect, useContext } from "react";
 import axios from "axios";
 
-const API_URL = "http://localhost:3000/auth";
+const API_URL = "http://localhost:3000/api/auth";
 
 interface AuthContextType {
   user: any;
@@ -22,7 +22,9 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
-export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
+export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({
+  children,
+}) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,9 +33,9 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
   // Check token expiration
   const checkTokenExpiration = (token: string | null) => {
     if (!token) return true;
-    
+
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const payload = JSON.parse(atob(token.split(".")[1]));
       return payload.exp * 1000 < Date.now();
     } catch (e) {
       return true;
@@ -93,8 +95,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
   // Add response interceptor
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
-      response => response,
-      error => {
+      (response) => response,
+      (error) => {
         if (error.response?.status === 401) {
           logout();
         }
@@ -113,13 +115,22 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
       });
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
-      axios.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
+      axios.defaults.headers.common[
+        "Authorization"
+      ] = `Bearer ${res.data.token}`;
       setUser(res.data.user);
       setIsAuthenticated(true);
       setError(null);
       return res.data;
     } catch (err) {
-      if (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response) {
+      if (
+        err &&
+        typeof err === "object" &&
+        "response" in err &&
+        err.response &&
+        typeof err.response === "object" &&
+        "data" in err.response
+      ) {
         setError((err as any).response?.data?.error || "Registration failed");
         throw (err as any).response?.data;
       } else {
@@ -133,10 +144,12 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
   const login = async (email: string, password: string) => {
     try {
       const res = await axios.post(`${API_URL}/login`, { email, password });
-      
+
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
-      axios.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
+      axios.defaults.headers.common[
+        "Authorization"
+      ] = `Bearer ${res.data.token}`;
       setUser(res.data.user);
       setIsAuthenticated(true);
       setError(null);
@@ -197,4 +210,4 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
 // Custom hook for easy access
 export const useAuth = () => {
   return useContext(AuthContext);
-}; 
+};
